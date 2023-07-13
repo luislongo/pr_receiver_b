@@ -24,10 +24,4 @@ jobs:
         env:
           AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
   
-      - id: automerge
-        name: automerge
-        uses: "pascalgn/automerge-action@v0.15.6"
-        env:
-          GITHUB_TOKEN: "${{ secrets.NPM_TOKEN }}"
-          MERGE_ERROR_FAIL: "true"
 

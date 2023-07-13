@@ -18,9 +18,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
           MERGE_ERROR_FAIL: "true"
           PR_NUMBER: ${{ github.event.check_suite.pull_requests[0].number }}
+          API_URL: "https://api.github.com/repos/luislongo/pr_receiver_b/pulls/${{ env.PR_NUMBER }}/merge"
         run: |
           echo "PR_NUMBER: $PR_NUMBER"
           echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+          echo "API_URL: $API_URL"
           echo "Running curl command..."
           curl -L \
           -X PUT \
@@ -28,4 +30,4 @@ jobs:
           -H "Authorization: Bearer $GITHUB_TOKEN"\
           -H "X-GitHub-Api-Version: 2022-11-28" \
           -d '{"commit_title":"Expand enum","commit_message":"Add a new value to the merge_method enum"}' \
-          "https://api.github.com/repos/luislongo/pr_receiver_b/pulls/$PR_NUMBER/merge"
+          "$API_URL"

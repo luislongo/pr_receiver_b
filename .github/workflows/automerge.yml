@@ -22,12 +22,12 @@ jobs:
         run: |
           echo "PR_NUMBER: $PR_NUMBER"
           echo "GITHUB_TOKEN: $GITHUB_TOKEN"
-          echo "API_URL: $API_URL"
+          echo "API_URL: ${{ env.API_URL }}"
           echo "Running curl command..."
           curl -L \
           -X PUT \
           -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer $GITHUB_TOKEN"\
+          -H "Authorization: Bearer ${{ env.GITHUB_TOKEN }}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           -d '{"commit_title":"Expand enum","commit_message":"Add a new value to the merge_method enum"}' \
-          "$API_URL"
+          "${{ env.API_URL }}"

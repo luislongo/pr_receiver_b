@@ -1,0 +1,20 @@
+name: automerge
+
+on:
+  pull_request:
+    types: [unlocked]
+
+jobs:
+  automerge:
+    name: automerge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - id: automerge
+        name: automerge
+        uses: "pascalgn/automerge-action@v0.15.6"
+        env:
+          GITHUB_TOKEN: "${{ secrets.NPM_TOKEN }}"
+          MERGE_ERROR_FAIL: "true"

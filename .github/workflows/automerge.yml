@@ -1,8 +1,9 @@
 name: automerge
 
 on:
-  pull_request:
-    types: [unlocked]
+  check_suite:
+    types:
+      - completed
 
 jobs:
   automerge:

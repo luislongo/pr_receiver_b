@@ -3,7 +3,6 @@ name: automerge
 on:
   check_suite:
     types: [completed]
-    branches: [main]
 
 jobs:
   automerge:

@@ -1,7 +1,6 @@
 name: Build and test
 
-on:
-  pull_request
+on: pull_request
 
 jobs:
   build-and-test:
@@ -16,12 +15,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: "16.14.2"
-      
+
       - name: Install and build
         run: |
           npm i 
           npm run build
-        env:
-          AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-  
-

@@ -13,6 +13,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Check All Checks
+        run: |
+          allChecksPassed=true
+          for checkRun in ${{ toJson(github.event.check_suite.check_runs) }}; do
+            conclusion=$(echo $checkRun | jq -r '.conclusion')
+            if [[ $conclusion != 'success' ]]; then
+              allChecksPassed=false
+              break
+            fi
+          done
+          if [[ $allChecksPassed == true ]]; then
+            echo "All checks have passed"
+          else
+            echo "Not all checks have passed"
+          fi
+
       - name: automerge
         env:
           GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
@@ -23,6 +39,7 @@ jobs:
           echo "${{fromJson(github.event)}}"
           echo "PR_NUMBER: ${{ env.PR_NUMBER }}"
           echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+          if []
           echo "https://api.github.com/repos/luislongo/pr_receiver_b/pulls/${{ env.PR_NUMBER }}/merge"
           echo "Running curl command..."
           curl -L \

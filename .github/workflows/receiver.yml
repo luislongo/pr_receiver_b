@@ -39,9 +39,8 @@ jobs:
 
       - name: Enables automerge in pull request
         run: |
-          PR_NUMBER= ${{ env.PULL_REQUEST_NUMBER }} # Replace with the desired PR number
           API_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          RESPONSE=$(curl -sSL -H "Authorization: token $TOKEN" "$API_URL")
+          RESPONSE=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PR_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PULL_REQUEST_NUMBER }}")
           NODE_ID=$(echo "$RESPONSE" | jq -r '.node_id')
           echo "::set-output name=node_id::$NODE_ID"
 

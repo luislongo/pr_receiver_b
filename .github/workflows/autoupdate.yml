@@ -20,13 +20,12 @@ jobs:
           node-version: "14"
 
       - name: Update package version
-        env: 
+        env:
           PACKAGE: ${{github.event.client_payload.package}}
           VERSION: ${{github.event.client_payload.version}}
+          AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
         run: |
           npm i ${{ env.PACKAGE }}@${{ env.VERSION }} -E
-        env:
-          AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Create pull request
         id: cpr

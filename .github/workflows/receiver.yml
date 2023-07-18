@@ -17,14 +17,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: "14"
 
       - name: Update package version
         run: |
           npm i ${{github.event.client_payload.package}}
         env:
           AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-    
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
@@ -35,3 +35,16 @@ jobs:
           title: "autoupdate/Bump ${{github.event.client_payload.package}} to ${{github.event.client_payload.version}}"
           body: |
             This PR updates ${{github.event.client_payload.package}} version to ${{github.event.client_payload.version}} based on the dispatched event.
+
+      - name: Enables automerge in pull request
+        run: |
+          curl 'https://graphql-api-url' \
+          -X POST \
+          -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \
+          -H 'content-type: application/json' \
+          --data '{
+            "query":"mutation { enablePullRequestAutoMerge(input: {
+              pullRequestId: \"${{github.event.client_payload.pull_request_id}}\",
+              mergeMethod: SQUASH
+            }) { pullRequest { id }
+            }}"}'

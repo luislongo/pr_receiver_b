@@ -20,8 +20,11 @@ jobs:
           node-version: "14"
 
       - name: Update package version
+        env: 
+          PACKAGE: ${{github.event.client_payload.package}}
+          VERSION: ${{github.event.client_payload.version}}
         run: |
-          npm i ${{github.event.client_payload.package}} -E
+          npm i ${{ env.PACKAGE }}@${{ env.VERSION }} -E
         env:
           AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 

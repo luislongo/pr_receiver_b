@@ -40,11 +40,11 @@ jobs:
         env:
           PR_ID: ${{github.event.pull_request.id}}
         run: |
-          echo $PR_ID
+          echo "${{ env.PR_ID }}"
           curl 'https://api.github.com/graphql' \
           -X POST \
           -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \
           -H 'content-type: application/json' \
           --data '{
-            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \"${{github.event.pull_request.id}}\" }) { pullRequestId } }"
+            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \"${{github.event.pull_request.id}}\" }) { pullRequest } }"
           }'

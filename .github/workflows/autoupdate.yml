@@ -1,4 +1,4 @@
-name: Receive Dispatched Event
+name: Autoupdate package
 
 on:
   repository_dispatch:
@@ -25,26 +25,29 @@ jobs:
         env:
           AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      - name: Create Pull Request
+      - name: Create pull request
         id: cpr
         uses: peter-evans/create-pull-request@v3
+        env:
+          PACKAGE: ${{github.event.client_payload.package}}
+          VERSION: ${{github.event.client_payload.version}}
         with:
           token: ${{secrets.PR_TOKEN}}
           labels: "automerge"
-          commit-message: "Bump ${{github.event.client_payload.package}} to ${{github.event.client_payload.version}}"
-          branch: "autoupdate/${{github.event.client_payload.package}}-${{github.event.client_payload.version}}"
-          title: "autoupdate/Bump ${{github.event.client_payload.package}} to ${{github.event.client_payload.version}}"
+          commit-message: "Bump ${{ env.PACKAGE }} to ${{ env.VERSION }}"
+          branch: "autoupdate/${{ env.PACKAGE }}-${{ env.VERSION }}"
+          title: "autoupdate/Bump ${{  env.PACKAGE }} to ${{ env.VERSION }}"
           body: |
-            This PR updates ${{github.event.client_payload.package}} version to ${{github.event.client_payload.version}} based on the dispatched event.
+            This PR updates ${{ env.PACKAGE }} version to ${{ env.VERSION }} based on the dispatched event.
 
-      - name: Gets nodeId from PR numbert
+      - name: Get node_id from pull request
         id: get-node-id
         run: |
           RESPONSE=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PR_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PULL_REQUEST_NUMBER }}")
           NODE_ID=$(echo "$RESPONSE" | jq -r '.node_id')
           echo "::set-output name=node_id::$NODE_ID"
 
-      - name: Enable auto merge
+      - name: Enable auto merge for pull request
         env:
           PULL_REQUEST_NODE_ID: ${{ steps.get-node-id.outputs.node_id }}
         run: |

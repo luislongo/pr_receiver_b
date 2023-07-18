@@ -43,8 +43,5 @@ jobs:
           -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \
           -H 'content-type: application/json' \
           --data '{
-            "query":"mutation { enablePullRequestAutoMerge(input: {
-              pullRequestId: \"${{github.event.client_payload.pull_request_id}}\",
-              mergeMethod: SQUASH
-            }) { pullRequest { id }
-            }}"}'
+            "query": "mutation { updatePullRequest(input: { pullRequestId: \"${{github.event.pull_request.id}}\", autoMergeEnable: true }) { pullRequest { id } } }"
+          }'

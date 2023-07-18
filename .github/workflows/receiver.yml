@@ -26,6 +26,7 @@ jobs:
           AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{secrets.PR_TOKEN}}
@@ -38,7 +39,7 @@ jobs:
 
       - name: Enables automerge in pull request
         env:
-          PR_ID: ${{github.event.pull_request.id}}
+          PR_ID: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
           echo "${{ env.PR_ID }}"
           curl 'https://api.github.com/graphql' \

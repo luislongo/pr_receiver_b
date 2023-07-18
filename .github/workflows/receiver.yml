@@ -38,11 +38,14 @@ jobs:
             This PR updates ${{github.event.client_payload.package}} version to ${{github.event.client_payload.version}} based on the dispatched event.
 
       - name: Enables automerge in pull request
-        env:
-          PR_ID: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          echo "${{ env.PULL_REQUEST_NUMBER }}"
-          echo "${{ secrets.PR_TOKEN }}"
+          PR_NUMBER= ${{ env.PULL_REQUEST_NUMBER }} # Replace with the desired PR number
+          API_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
+          RESPONSE=$(curl -sSL -H "Authorization: token $TOKEN" "$API_URL")
+          NODE_ID=$(echo "$RESPONSE" | jq -r '.node_id')
+          echo "::set-output name=node_id::$NODE_ID"
+
+
           curl 'https://api.github.com/graphql' \
           -X POST \
           -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \

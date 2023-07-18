@@ -37,18 +37,21 @@ jobs:
           body: |
             This PR updates ${{github.event.client_payload.package}} version to ${{github.event.client_payload.version}} based on the dispatched event.
 
-      - name: Enables automerge in pull request
+      - name: Gets nodeId from PR numbert
+        id: get-node-id
         run: |
-          API_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
           RESPONSE=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PR_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PULL_REQUEST_NUMBER }}")
           NODE_ID=$(echo "$RESPONSE" | jq -r '.node_id')
           echo "::set-output name=node_id::$NODE_ID"
 
-
+      - name: Enable auto merge
+        env:
+          PULL_REQUEST_NODE_ID: ${{ steps.get-node-id.outputs.node_id }}
+        run: |
           curl 'https://api.github.com/graphql' \
           -X POST \
           -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \
           -H 'content-type: application/json' \
           --data '{
-            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \"${{env.PULL_REQUEST_NUMBER}}\" }) { pullRequest { number } } }"
+            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \"${{env.PULL_REQUEST_NODE_ID}}\" }) { pullRequest { number } } }"
           }'

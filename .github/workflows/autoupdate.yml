@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: "14"
 
-          - name: Log PR
+      - name: Log PR
         run: |
           echo "OG_PACKAGE_NAME: ${{ github.event.client_payload.OG_PACKAGE_NAME }}"
           echo "OG_PACKAGE_VERSION: ${{ github.event.client_payload.OG_PACKAGE_VERSION }}"

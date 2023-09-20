@@ -33,7 +33,8 @@ jobs:
           OG_PR_NUMBER: "${{ github.event.client_payload.OG_PR_NUMBER }}"
           OG_BRANCH_NAME: "${{ github.event.client_payload.OG_BRANCH_NAME }}"
           NPM_TOKEN: "${{ secrets.NPM_TOKEN }}"
-          USER_NAME: "luislongo"
+          ORGANIZATION: "luislongo"
+          USERNAME: "luislongo"
           USER_EMAIL: "luis.longof@gmail.com"
           THIS_PACKAGE_NAME: "luislongo/pr_receiver_b"
           THIS_BASE_BRANCH: "main"
@@ -44,18 +45,18 @@ jobs:
           OG_PR_NUMBER=${{ env.OG_PR_NUMBER }}
           AUTH_TOKEN="Bearer ${{ secrets.NPM_TOKEN }}"
 
-          echo "OG_PACKAGE_NAME: $OG_PACKAGE_NAME"
-          echo "OG_PACKAGE_VERSION: $OG_PACKAGE_VERSION"
-          echo "OG_BRANCH_NAME: $OG_BRANCH_NAME"
-          echo "OG_PR_NUMBER: $OG_PR_NUMBER"
+          ORGANIZATION=${{ env.ORGANIZATION }}
+
+          USERNAME=${{ env.USERNAME }}
+          USER_EMAIL=${{ env.USER_EMAIL }}
 
           THIS_PACKAGE_NAME=${{ env.THIS_PACKAGE_NAME }}
           THIS_BASE_BRANCH=${{ env.THIS_BASE_BRANCH }}
 
           echo Initial setup 
 
-          git config --global user.email "DES@gmail.com"
-          git config --global user.name "DES"
+          git config --global user.email "$USER_EMAIL"
+          git config --global user.name "$USERNAME"
 
           echo 'Checking if branch '$OG_BRANCH_NAME' exists...'
 
@@ -122,7 +123,7 @@ jobs:
             PR=$(curl \
             -H "Authorization: $AUTH_TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            'https://api.github.com/repos/'$THIS_PACKAGE_NAME'/pulls?state=open&head=luislongo:'$OG_BRANCH_NAME'&base='$THIS_BASE_BRANCH )
+            'https://api.github.com/repos/'$THIS_PACKAGE_NAME'/pulls?state=open&head='$ORGANIZATION':'$OG_BRANCH_NAME'&base='$THIS_BASE_BRANCH )
 
             echo $PR 
 

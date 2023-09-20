@@ -19,45 +19,144 @@ jobs:
         with:
           node-version: "14"
 
-      - name: Update package version
-        env:
-          PACKAGE: ${{github.event.client_payload.package}}
-          VERSION: ${{github.event.client_payload.version}}
-          AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          - name: Log PR
         run: |
-          npm i ${{ env.PACKAGE }}@${{ env.VERSION }} -E
+          echo "OG_PACKAGE_NAME: ${{ github.event.client_payload.OG_PACKAGE_NAME }}"
+          echo "OG_PACKAGE_VERSION: ${{ github.event.client_payload.OG_PACKAGE_VERSION }}"
+          echo "OG_BRANCH_NAME: ${{ github.event.client_payload.OG_BRANCH_NAME }}"
+          echo "OG_PR_NUMBER: ${{ github.event.client_payload.OG_PR_NUMBER }}"
 
-      - name: Create pull request
-        id: cpr
-        uses: peter-evans/create-pull-request@v3
+      - name: Update branch routine
         env:
-          PACKAGE: ${{github.event.client_payload.package}}
-          VERSION: ${{github.event.client_payload.version}}
-        with:
-          token: ${{secrets.PR_TOKEN}}
-          labels: "automerge"
-          commit-message: "Bump ${{ env.PACKAGE }} to ${{ env.VERSION }}"
-          branch: "autoupdate/${{ env.PACKAGE }}-${{ env.VERSION }}"
-          title: "autoupdate/Bump ${{  env.PACKAGE }} to ${{ env.VERSION }}"
-          body: |
-            This PR updates ${{ env.PACKAGE }} version to ${{ env.VERSION }} based on the dispatched event.
-
-      - name: Get node_id from pull request
-        id: get-node-id
+          OG_PACKAGE_NAME: "${{ github.event.client_payload.OG_PACKAGE_NAME }}"
+          OG_PACKAGE_VERSION: "${{ github.event.client_payload.OG_PACKAGE_VERSION }}"
+          OG_PR_NUMBER: "${{ github.event.client_payload.OG_PR_NUMBER }}"
+          OG_BRANCH_NAME: "${{ github.event.client_payload.OG_BRANCH_NAME }}"
+          NPM_TOKEN: "${{ secrets.NPM_TOKEN }}"
+          USER_NAME: "luislongo"
+          USER_EMAIL: "luis.longof@gmail.com"
+          THIS_PACKAGE_NAME: "luislongo/pr_receiver_b"
+          THIS_BASE_BRANCH: "main"
         run: |
-          RESPONSE=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PR_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PULL_REQUEST_NUMBER }}")
-          NODE_ID=$(echo "$RESPONSE" | jq -r '.node_id')
-          echo "::set-output name=node_id::$NODE_ID"
+          OG_PACKAGE_NAME=${{ env.OG_PACKAGE_NAME }}
+          OG_PACKAGE_VERSION=${{ env.OG_PACKAGE_VERSION }}
+          OG_BRANCH_NAME=${{ env.OG_BRANCH_NAME }}
+          OG_PR_NUMBER=${{ env.OG_PR_NUMBER }}
+          AUTH_TOKEN="Bearer ${{ secrets.NPM_TOKEN }}"
 
-      - name: Enable auto merge for pull request
-        env:
-          PULL_REQUEST_NODE_ID: ${{ steps.get-node-id.outputs.node_id }}
-        run: |
-          echo ${{env.PULL_REQUEST_NODE_ID}}
-          curl 'https://api.github.com/graphql' \
+          echo "OG_PACKAGE_NAME: $OG_PACKAGE_NAME"
+          echo "OG_PACKAGE_VERSION: $OG_PACKAGE_VERSION"
+          echo "OG_BRANCH_NAME: $OG_BRANCH_NAME"
+          echo "OG_PR_NUMBER: $OG_PR_NUMBER"
+
+          THIS_PACKAGE_NAME=${{ env.THIS_PACKAGE_NAME }}
+          THIS_BASE_BRANCH=${{ env.THIS_BASE_BRANCH }}
+
+          echo Initial setup 
+
+          git config --global user.email "DES@gmail.com"
+          git config --global user.name "DES"
+
+          echo 'Checking if branch '$OG_BRANCH_NAME' exists...'
+
+          EXISTENT_BRANCH_NAME=$(curl \
+            -H "Authorization: $AUTH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$THIS_PACKAGE_NAME/branches/$OG_BRANCH_NAME" | jq '.name') 
+          echo "EXISTENT_BRANCH_NAME: $EXISTENT_BRANCH_NAME"
+
+          if [ "$EXISTENT_BRANCH_NAME" = 'null' ]; then
+            echo 'Branch '$OG_BRANCH_NAME' does not exist.'
+            echo 'Creating branch...'
+
+            git checkout -b $OG_BRANCH_NAME
+
+            echo 'Branch created.'
+            echo 'Installing package '$PACKAGE_NAME'...'
+
+            npm i --save-exact "@${OG_PACKAGE_NAME}@${OG_PACKAGE_VERSION}" 
+
+            echo 'Package installed.'
+            echo 'Commiting changes...'
+
+            git fetch origin
+            git add . > /dev/null
+            git commit -m "Update ${OG_PACKAGE_NAME} to ${OG_PACKAGE_VERSION}" > /dev/null
+            git push origin $OG_BRANCH_NAME > /dev/null
+
+            echo 'Changes commited.'
+            echo 'Creating PR...'
+
+            PR=$(curl \
+            -X POST \
+            -H "Authorization: $AUTH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$THIS_PACKAGE_NAME/pulls \
+            -d '{"title":"'$OG_BRANCH_NAME'","body":"Updates '$OG_PACKAGE_NAME' to version '$OG_PACKAGE_VERSION'","head":"'$OG_BRANCH_NAME'","base":"'$THIS_BASE_BRANCH'"}')
+
+            PR_URL=$(echo "$PR" | jq -r '.html_url')
+            echo "New PR URL: $PR_URL"
+
+          else 
+            echo "Branch exists"
+            echo "Checking out branch $OG_BRANCH_NAME..."
+
+            git fetch origin
+            git checkout $OG_BRANCH_NAME
+
+            echo "Branch checked out"
+            echo "Installing package $OG_PACKAGE_NAME..."
+
+            npm i --save-exact "@${OG_PACKAGE_NAME}@${OG_PACKAGE_VERSION}"
+
+            echo "Package installed"
+            echo "Commiting changes..."
+
+            git add . 
+            git commit -m "Update ${OG_PACKAGE_NAME} to ${OG_PACKAGE_VERSION}"
+            git push origin $OG_BRANCH_NAME 
+
+            echo "Changes commited"
+            echo "Checking if a PR $OG_BRANCH_NAME > main exists..."
+
+            PR=$(curl \
+            -H "Authorization: $AUTH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            'https://api.github.com/repos/'$THIS_PACKAGE_NAME'/pulls?state=open&head=luislongo:'$OG_BRANCH_NAME'&base='$THIS_BASE_BRANCH )
+
+            echo $PR 
+
+            PR_URL=$(echo "$PR" | jq -r '.[0].html_url')
+            PR_NUMBER=$(echo "$PR" | jq -r '.[0].number')
+
+            if [ "$PR_URL" == 'null' ]; then
+              echo "PR does not exist"
+              echo "Creating PR..."
+
+              PR=$(curl \
+              -X POST \
+              -H "Authorization: $AUTH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/$THIS_PACKAGE_NAME/pulls \
+              -d '{"title":"'$OG_BRANCH_NAME'","body":"Updates '$OG_PACKAGE_NAME' to version '$OG_PACKAGE_VERSION'","head":"'$OG_BRANCH_NAME'","base":"'$THIS_BASE_BRANCH'"}')
+              echo $PR
+
+              PR_URL=$(echo "$PR" | jq -r '.html_url')
+              PR_NUMBER=$(echo "$PR" | jq -r '.number')
+
+              echo "PR #$PR_NUMBER created. URL: $PR_URL"
+            else 
+              echo "PR already exists at #$PR_NUMBER. URL: $PR_URL"
+            fi
+          fi
+
+          echo "Creating comment on original PR..."
+
+          curl \
           -X POST \
-          -H 'Authorization: Bearer ${{ secrets.PR_TOKEN }}' \
-          -H 'content-type: application/json' \
-          --data '{
-            "query": "mutation { enablePullRequestAutoMerge(input: { pullRequestId: \"${{env.PULL_REQUEST_NODE_ID}}\" }) { pullRequest { number } } }"
-          }'
+          -H "Authorization: $AUTH_TOKEN" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "https://api.github.com/repos/$OG_PACKAGE_NAME/issues/$OG_PR_NUMBER/comments" \
+          -d '{"body":"PR created for '$THIS_PACKAGE_NAME' at: '$PR_URL'"}' 
+
+          echo "Comment created"
